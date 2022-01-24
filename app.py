@@ -22,8 +22,8 @@ def index():
     if 'user' in session:
         user = database.getUser(session['user']['_id'])
         if user["type"] == "doctor":
-            return render_template('doctor.html', user = user)
-        return render_template('user.html', user = user)
+            return render_template('doctors/doctor.html', user = user)
+        return render_template('patients/user.html', user = user)
     return render_template('index.html')
 
 @app.route('/logout')
@@ -65,7 +65,7 @@ def doctors():
                 doctors = []
                 for d in doctorIDs:
                     doctors.append(database.getUser(d))
-                return render_template('doctors.html', doctors = doctors, user = user)
+                return render_template('patients/doctors.html', doctors = doctors, user = user)
         elif request.method == 'POST':
             doctorId = request.form.get("doctorId")
             doc = database.getUser(doctorId)
@@ -101,7 +101,7 @@ def patients():
                 patients = []
                 for d in patientsIDs:
                     patients.append(database.getUser(d))
-                return render_template('patients.html', patients = patients, user = user)
+                return render_template('doctors/patients.html', patients = patients, user = user)
         elif request.method == 'POST':
             patientsId = request.form.get("patientId")
             patient = database.getUser(patientsId)
@@ -134,7 +134,7 @@ def doctorView(id):
         user = database.getUser(session['user']['_id'])
         if user["type"] == "user":
             doctor = database.getUser(id)
-            return render_template('doctorview.html', user = user, doctor = doctor)
+            return render_template('patients/doctorview.html', user = user, doctor = doctor)
 
 @app.route('/patient/<id>')
 def patientView(id):
@@ -142,7 +142,7 @@ def patientView(id):
         user = database.getUser(session['user']['_id'])
         if user["type"] == "doctor":
             patient = database.getUser(id)
-            return render_template('patientview.html', user = user, patient = patient)
+            return render_template('doctors/patientview.html', user = user, patient = patient)
         
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
