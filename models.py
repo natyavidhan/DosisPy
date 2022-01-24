@@ -59,7 +59,7 @@ class Database:
     def addDoctor(self, id, doctor):
         user = self.getUser(id)
         if user:
-            if user['type'] == "paient":
+            if user['type'] == "user":
                 self.users.update_one({"_id": id}, {"$push": {"doctors": doctor}})
             else:
                 return False

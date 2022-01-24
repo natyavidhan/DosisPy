@@ -64,13 +64,18 @@ def doctors():
         else:
             doctorId = request.form.get("doctorId")
             doc = database.getUser(doctorId)
+            user = database.getUser(session['user']['_id'])
             if doc:
                 if doc["type"] == "doctor":
-                    database.addDoctor(session['user']['_id'], doctorId)
+                    if doc["_id"] not in user["doctors"]:
+                        database.addDoctor(session['user']['_id'], doctorId)
+                        return redirect(url_for('doctors'))
+                    else:
+                        return redirect(url_for('doctors'))
                 else:
-                    abort(404)
+                    return jsonify({"error": "User is not a doctor"})
             else:
-                abort(404)
+                return jsonify({"error": "User does not exist"})
 
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
