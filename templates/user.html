@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}
+    User Home
+{% endblock title %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="text-center">
+            <h1>Welcome {{ user.name }}</h1>
+            <div class="buttons">
+                <a href="/settings"><button class="btn btn-warning">Settings</button></a>
+                <a href="/logout"><button class="btn btn-danger">Logout</button></a>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
