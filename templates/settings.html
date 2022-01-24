@@ -4,6 +4,14 @@
 {% endblock title %}
 {% block content %}
 <link rel="stylesheet" href="/static/css/settings.css">
+<style>
+    
+.container{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+</style>
     <div class="container mt-5">
         <div>
             <div class="text-center">
@@ -41,7 +49,7 @@
                 </div>
                 <div class="mt-3">
                     <label for="name">Contact No.</label>
-                    <input type="number" name="contact" id="contact" value="{{ user.contactNumber }}">
+                    <input type="number" name="contactNumber" id="contact" value="{{ user.contactNumber }}">
                 </div>
                 <div class="mt-3">
                     <label for="allergies">Allergies</label>

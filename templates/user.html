@@ -5,37 +5,44 @@
 {% block content %}
     <div class="container mt-5">
         <div class="text-center">
+            <center>
+                <img src="https://avatars.dicebear.com/api/miniavs/{{user['_id']}}.svg" alt="" height="200px">
+            </center>
             <h1>Welcome {{ user.name }}</h1>
             <div class="buttons">
                 <a href="/settings"><button class="btn btn-warning">Settings</button></a>
                 <a href="/logout"><button class="btn btn-danger">Logout</button></a>
             </div>
         </div>
-        <div class="cards mt-5">
-            <div class="user-card">
-                <img src="/static/img/doctor.png" alt="" class="user-card-image">
-                <div class="user-card-content">
-                    <h3 class="user-card-title">Doctors</h3>
+        <center>
+            <div class="cards mt-5">
+                <a href="/doctors">
+                    <div class="user-card">
+                        <img src="/static/img/doctor.png" alt="" class="user-card-image">
+                        <div class="user-card-content">
+                            <h3 class="user-card-title">Doctors</h3>
+                        </div>
+                    </div>
+                </a>
+                <div class="user-card">
+                    <img src="/static/img/health-report.png" alt="" class="user-card-image">
+                    <div class="user-card-content">
+                        <h3 class="user-card-title">Med. Reports</h3>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <img src="/static/img/lab-report.png" alt="" class="user-card-image">
+                    <div class="user-card-content">
+                        <h3 class="user-card-title">Lab Reports</h3>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <img src="/static/img/family.png" alt="" class="user-card-image">
+                    <div class="user-card-content">
+                        <h3 class="user-card-title">Families</h3>
+                    </div>
                 </div>
             </div>
-            <div class="user-card">
-                <img src="/static/img/health-report.png" alt="" class="user-card-image">
-                <div class="user-card-content">
-                    <h3 class="user-card-title">Med. Reports</h3>
-                </div>
-            </div>
-            <div class="user-card">
-                <img src="/static/img/lab-report.png" alt="" class="user-card-image">
-                <div class="user-card-content">
-                    <h3 class="user-card-title">Lab Reports</h3>
-                </div>
-            </div>
-            <div class="user-card">
-                <img src="/static/img/family.png" alt="" class="user-card-image">
-                <div class="user-card-content">
-                    <h3 class="user-card-title">Families</h3>
-                </div>
-            </div>
-        </div>
+        </center>
     </div>
 {% endblock content %}

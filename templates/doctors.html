@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}
+    Doctors
+{% endblock title %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="text-center">
+            <h1>Doctors</h1>
+        </div>
+        <div class="doctors cards mt-5">
+            {% for doc in doctors %}
+            <a href="/doctor/{{doc._id}}">
+                <div class="user-card">
+                    <img src="https://avatars.dicebear.com/api/miniavs/{{doc['_id']}}.svg" alt="" height="150px" class="user-card-image">
+                    <div class="user-card-content">
+                        <h3 class="user-card-title">{{doc.name}}</h3>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock content %}

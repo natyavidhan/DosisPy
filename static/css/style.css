@@ -1,6 +1,6 @@
 .user-card-image{
-    height: 200px !important;
-    width: 200px !important;
+    height: 175px !important;
+    width: 175px !important;
     display: block;
     aspect-ratio: 1/1;
     object-fit: cover;
@@ -41,10 +41,4 @@
     justify-content: center;
     transition: 200ms ease-in-out;
     align-items: center;
-}
-
-.container{
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
 }

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 from models import Database
 from authlib.integrations.flask_client import OAuth
 from loginpass import create_flask_blueprint, GitHub, Google, Gitlab, Discord
@@ -49,6 +49,28 @@ def settings():
             database.updateUser(session['user']['_id'], data)
             
     return redirect(url_for('index'))
+
+@app.route('/doctors', methods=['GET', 'POST'])
+def doctors():
+    if 'user' in session:
+        if request.method == 'GET':
+            user = database.getUser(session['user']['_id'])
+            if user["type"] == "user":
+                doctorIDs = user["doctors"]
+                doctors = []
+                for d in doctorIDs:
+                    doctors.append(database.getUser(d))
+                return render_template('doctors.html', doctors = doctors, user = user)
+        else:
+            doctorId = request.form.get("doctorId")
+            doc = database.getUser(doctorId)
+            if doc:
+                if doc["type"] == "doctor":
+                    database.addDoctor(session['user']['_id'], doctorId)
+                else:
+                    abort(404)
+            else:
+                abort(404)
 
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
