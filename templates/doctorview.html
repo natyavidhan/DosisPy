@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{doctor.name}}
+{% endblock title %}
+{% block content %}
+<link rel="stylesheet" href="/static/css/doctor.css">
+<div class="container mt-5">
+    <center>
+        <img src="https://avatars.dicebear.com/api/miniavs/{{doctor['_id']}}.svg" alt="" height="150px">
+        <h1>{{doctor.name}}</h1>
+        {% if doctor._id in user.doctors %}
+            <button class="btn btn-danger" onclick="removeDoctor()">Remove</button>
+        {% else %}
+            <form action="/doctors" method="post">
+                <input type="hidden" name="doctorId" value="{{doctor['_id']}}">
+                <button class="btn btn-success">Add</button>
+            </form>
+        {% endif %}
+    </center>
+    <div class="doctor-activity mt-5">
+        <div>
+            <h5>Your Medical Reports by {{doctor.name}}</h5>
+            <ol class="list-group list-group-numbered">
+                {% for medrep in user.medicalReports %}
+                    {% if medrep.by == doctor._id %}
+                        <li class="list-group-item">{{medrep["heading"]}}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </div>
+        <div>
+            <h5>Your Lab Reports by {{doctor.name}}</h5>
+            <ol class="list-group list-group-numbered">
+                {% for labrep in user.labReports %}
+                    {% if labrep.by == doctor._id %}
+                        <li class="list-group-item">{{labrep["heading"]}}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+</div>
+<script>
+    function removeDoctor(){
+        const id = "{{doctor._id}}";
+        $.ajax({
+            url: '/doctors',
+            type: 'DELETE',
+            data: {
+                doctorId: id
+            },
+            mimetype: 'multipart/form-data',
+            success: function(result){
+                window.location.href = '/doctors';
+            }
+        });
+    }
+</script>
+{% endblock content %}

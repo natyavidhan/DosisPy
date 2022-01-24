@@ -27,7 +27,7 @@ class Database:
             "contactNumber": 0,
             "gender": "",
             "allergies": [],
-            "labResports": [],
+            "labReports": [],
             "medicalReports": [],
             "notifications": [],
             "type": "user",
@@ -42,14 +42,24 @@ class Database:
         return self.users.find_one({"_id": id})
     
     def makeDoctor(self, email):
-        self.users.update_one({"email": email}, {"$set": {"type": "doctor"}})
-        self.users.update_one({"email": email}, {"$set": {"patients": []}})
+        self.users.update_one({"email": email}, {"$set": {"type": "doctor", "patients": [], "labReports": [], "medicalReports": []}})
         
     def addPatient(self, id, patient):
         user = self.getUser(id)
         if user:
             if user['type'] == "doctor":
                 self.users.update_one({"_id": id}, {"$push": {"patients": patient}})
+            else:
+                return False
+        else:
+            return False
+        return True
+    
+    def removePatient(self, id, patient):
+        user = self.getUser(id)
+        if user:
+            if user['type'] == "doctor":
+                self.users.update_one({"_id": id}, {"$pull": {"patients": patient}})
             else:
                 return False
         else:
@@ -67,6 +77,18 @@ class Database:
             return False
         return True
     
+    def removeDoctor(self, id, doctor):
+        user = self.getUser(id)
+        if user:
+            if user['type'] == "user":
+                self.users.update_one({"_id": id}, {"$pull": {"doctors": doctor}})
+            else:
+                return False
+        else:
+            return False
+        return True
+
+
     def userExists(self, email):
         return self.users.find_one({"email": email}) is not None
     

@@ -50,7 +50,7 @@ def settings():
             
     return redirect(url_for('index'))
 
-@app.route('/doctors', methods=['GET', 'POST'])
+@app.route('/doctors', methods=['GET', 'POST', 'DELETE'])
 def doctors():
     if 'user' in session:
         if request.method == 'GET':
@@ -61,7 +61,7 @@ def doctors():
                 for d in doctorIDs:
                     doctors.append(database.getUser(d))
                 return render_template('doctors.html', doctors = doctors, user = user)
-        else:
+        elif request.method == 'POST':
             doctorId = request.form.get("doctorId")
             doc = database.getUser(doctorId)
             user = database.getUser(session['user']['_id'])
@@ -76,7 +76,24 @@ def doctors():
                     return jsonify({"error": "User is not a doctor"})
             else:
                 return jsonify({"error": "User does not exist"})
+        elif request.method == 'DELETE':
+            doctorId = request.form.get("doctorId")
+            doc = database.getUser(doctorId)
+            user = database.getUser(session['user']['_id'])
+            if doc:
+                if doc["type"] == "doctor":
+                    if doc["_id"] in user["doctors"]:
+                        database.removeDoctor(session['user']['_id'], doctorId)
+            return jsonify({"success": "Doctor removed"})
 
+@app.route('/doctor/<id>')
+def doctorView(id):
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "user":
+            doctor = database.getUser(id)
+            return render_template('doctorview.html', user = user, doctor = doctor)
+        
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
         session['user'] = database.getUserByEmail(user_info['email'])
