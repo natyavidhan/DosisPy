@@ -91,6 +91,42 @@ def doctors():
                         database.removeDoctor(session['user']['_id'], doctorId)
             return jsonify({"success": "Doctor removed"})
 
+@app.route('/patients', methods=['GET', 'POST', 'DELETE'])
+def patients():
+    if 'user' in session:
+        if request.method == 'GET':
+            user = database.getUser(session['user']['_id'])
+            if user["type"] == "doctor":
+                patientsIDs = user["patients"]
+                patients = []
+                for d in patientsIDs:
+                    patients.append(database.getUser(d))
+                return render_template('patients.html', patients = patients, user = user)
+        elif request.method == 'POST':
+            patientsId = request.form.get("patientId")
+            patient = database.getUser(patientsId)
+            user = database.getUser(session['user']['_id'])
+            if patient:
+                if patient["type"] == "user":
+                    if patient["_id"] not in user["patients"]:
+                        database.addPatient(session['user']['_id'], patientsId)
+                        return redirect(url_for('patients'))
+                    else:
+                        return redirect(url_for('patients'))
+                else:
+                    return jsonify({"error": "User is not a patient"})
+            else:
+                return jsonify({"error": "User does not exist"})
+        elif request.method == 'DELETE':
+            patientId = request.form.get("patientId")
+            patient = database.getUser(patientId)
+            user = database.getUser(session['user']['_id'])
+            if doc:
+                if patient["type"] == "user":
+                    if patient["_id"] in user["patients"]:
+                        database.removeDoctor(session['user']['_id'], patientId)
+            return jsonify({"success": "Patient removed"})
+
 @app.route('/doctor/<id>')
 def doctorView(id):
     if 'user' in session:

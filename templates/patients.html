@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}
+    Patients
+{% endblock title %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="text-center">
+            <h1>Patients</h1>
+            <div class="add-patient">
+                <form method="post">
+                    <h4>Add Patient</h4>
+                    <input type="text" name="patientId">
+                    <button class="btn btn-success" type="submit">Add</button>
+                </form>
+            </div>
+        </div>
+        <div class="patients cards mt-5">
+            {% for pat in patients %}
+            <a href="/patient/{{pat._id}}">
+                <div class="user-card">
+                    <img src="https://avatars.dicebear.com/api/miniavs/{{pat['_id']}}.svg" alt="" height="150px" class="user-card-image">
+                    <div class="user-card-content">
+                        <h3 class="user-card-title">{{pat.name}}</h3>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock content %}
