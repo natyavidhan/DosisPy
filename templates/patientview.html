@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{patient.name}}
+{% endblock title %}
+{% block content %}
+<link rel="stylesheet" href="/static/css/doctor.css">
+<div class="container mt-5">
+    <center>
+        <img src="https://avatars.dicebear.com/api/miniavs/{{patient['_id']}}.svg" alt="" height="150px">
+        <h1>{{patient.name}}</h1>
+        {% if patient._id in user.patients %}
+            <button class="btn btn-danger" onclick="removepatient()">Remove</button>
+        {% else %}
+            <form action="/patients" method="post">
+                <input type="hidden" name="patientId" value="{{patient['_id']}}">
+                <button class="btn btn-success">Add</button>
+            </form>
+        {% endif %}
+    </center>
+    <div class="patient-activity mt-5">
+        <div>
+            <h5>Your Medical Reports to {{patient.name}}</h5>
+            <ol class="list-group list-group-numbered">
+                {% for medrep in patient.medicalReports %}
+                    {% if medrep.by == user._id %}
+                        <li class="list-group-item">{{medrep["heading"]}}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </div>
+        <div>
+            <h5>Your Lab Reports to {{patient.name}}</h5>
+            <ol class="list-group list-group-numbered">
+                {% for labrep in patient.labReports %}
+                    {% if labrep.by == user._id %}
+                        <li class="list-group-item">{{labrep["heading"]}}</li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+</div>
+<script>
+    function removepatient(){
+        const id = "{{patient._id}}";
+        $.ajax({
+            url: '/patients',
+            type: 'DELETE',
+            data: {
+                patientId: id
+            },
+            mimetype: 'multipart/form-data',
+            success: function(result){
+                window.location.href = '/patients';
+            }
+        });
+    }
+</script>
+{% endblock content %}

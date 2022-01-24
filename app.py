@@ -119,12 +119,13 @@ def patients():
                 return jsonify({"error": "User does not exist"})
         elif request.method == 'DELETE':
             patientId = request.form.get("patientId")
+            print(patientId)
             patient = database.getUser(patientId)
             user = database.getUser(session['user']['_id'])
-            if doc:
+            if patient:
                 if patient["type"] == "user":
                     if patient["_id"] in user["patients"]:
-                        database.removeDoctor(session['user']['_id'], patientId)
+                        database.removePatient(session['user']['_id'], patientId)
             return jsonify({"success": "Patient removed"})
 
 @app.route('/doctor/<id>')
@@ -134,6 +135,14 @@ def doctorView(id):
         if user["type"] == "user":
             doctor = database.getUser(id)
             return render_template('doctorview.html', user = user, doctor = doctor)
+
+@app.route('/patient/<id>')
+def patientView(id):
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "doctor":
+            patient = database.getUser(id)
+            return render_template('patientview.html', user = user, patient = patient)
         
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
