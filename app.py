@@ -26,6 +26,11 @@ def index():
         return render_template('user.html', user = user)
     return render_template('index.html')
 
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('index'))
+
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     if 'user' in session:
