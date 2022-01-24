@@ -69,3 +69,6 @@ class Database:
     
     def userExists(self, email):
         return self.users.find_one({"email": email}) is not None
+    
+    def updateUser(self, id, newData):
+        self.users.update_one({"_id": id}, {"$set": newData})
