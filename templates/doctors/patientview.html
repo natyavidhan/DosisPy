@@ -23,7 +23,7 @@
             <ol class="list-group list-group-numbered">
                 {% for medrep in patient.medicalReports %}
                     {% if medrep.by == user._id %}
-                        <li class="list-group-item">{{medrep["heading"]}}</li>
+                        <a href="/reports/medical/{{medrep['_id']}}"><li class="list-group-item">{{medrep["heading"]}}</li></a>
                     {% endif %}
                 {% endfor %}
             </ol>

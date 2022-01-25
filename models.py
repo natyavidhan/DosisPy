@@ -97,6 +97,7 @@ class Database:
     
     def addMedicalReport(self, report):
         user = self.getUser(report["by"])
+        report["_id"] = self.makeId()
         if user:
             if user['type'] == "doctor":
                 self.users.update_one({"_id": report["by"]}, {"$push": {"medicalReports": report}})
@@ -106,3 +107,18 @@ class Database:
         else:
             return False
         return True
+
+    def getMedicalReport(self, id, reportID):
+        user = self.getUser(id)
+        if user:
+            reports = self.users.find_one({"_id": id})["medicalReports"]
+            report = None
+            for r in reports:
+                if r["_id"] == reportID:
+                    report = r
+            if report:
+                report["by"] = self.getUser(report["by"])
+                report["for"] = self.getUser(report["for"])
+                return report
+            return False
+        return False

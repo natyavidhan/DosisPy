@@ -133,6 +133,8 @@ def doctorView(id):
         if user["type"] == "user":
             doctor = database.getUser(id)
             return render_template('patients/doctorview.html', user = user, doctor = doctor)
+        return redirect(url_for('index'))
+    return redirect(url_for('index'))
 
 @app.route('/patient/<id>')
 def patientView(id):
@@ -141,6 +143,8 @@ def patientView(id):
         if user["type"] == "doctor":
             patient = database.getUser(id)
             return render_template('doctors/patientview.html', user = user, patient = patient)
+        return redirect(url_for('index'))
+    return redirect(url_for('index'))
    
 @app.route('/reports/medical', methods=['GET'])
 def medicalReport():
@@ -198,6 +202,24 @@ def newMedicalReport():
                 patient = database.getUser(data["for"])
                 if patient:
                     database.addMedicalReport(data)
+                    return redirect(url_for('medicalReport'))
+                return jsonify({"error": "Patient does not exist"})
+        return jsonify({"error": "User is not a doctor"})
+    return redirect(url_for('index'))
+
+@app.route('/reports/medical/<id>', methods=['GET', 'POST'])
+def viewMedicalReport(id):
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        report = database.getMedicalReport(session['user']['_id'], id)
+        if report:
+            if user["type"] == "user":
+                return render_template('patients/reports/medical/view.html', user = user, report = report)
+            else:
+                return render_template('doctors/reports/medical/view.html', user = user, report = report)
+        else:
+            return redirect(url_for('medicalReport'))
+    return redirect(url_for('index'))
 
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
