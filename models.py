@@ -7,15 +7,15 @@ from dotenv import dotenv_values
 
 
 class Database:
-    def __init__(self):
+    def __init__(self, storage):
         self.config = dotenv_values(".env")
         self.db = MongoClient(self.config["MONGOURL"]).Dosis
         self.users = self.db.users
         self.blogs = self.db.blogs
+        self.storage = storage
         
-        
-    def makeId(self):
-        return "".join(random.sample("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_", 10))
+    def makeId(self, length = 24):
+        return "".join(random.sample("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_", length))
     
     def addUser(self, email):
         user = {
@@ -112,6 +112,37 @@ class Database:
         user = self.getUser(id)
         if user:
             reports = self.users.find_one({"_id": id})["medicalReports"]
+            report = None
+            for r in reports:
+                if r["_id"] == reportID:
+                    report = r
+            if report:
+                report["by"] = self.getUser(report["by"])
+                report["for"] = self.getUser(report["for"])
+                return report
+            return False
+        return False
+    
+    def addLabReport(self, report):
+        user = self.getUser(report["by"])
+        report["_id"] = self.makeId(30)
+        if user:
+            if user['type'] == "doctor":
+                self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).put(report["fileLink"])
+                report["fileLink"] = self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).get_url(None)
+                self.users.update_one({"_id": report["by"]}, {"$push": {"labReports": report}})
+                self.users.update_one({"_id": report["for"]}, {"$push": {"labReports": report}})
+                return report["_id"]
+            else:
+                return False
+        else:
+            return False
+        return True
+
+    def getLabReport(self, id, reportID):
+        user = self.getUser(id)
+        if user:
+            reports = self.users.find_one({"_id": id})["labReports"]
             report = None
             for r in reports:
                 if r["_id"] == reportID:

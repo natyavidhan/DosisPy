@@ -4,6 +4,7 @@ from authlib.integrations.flask_client import OAuth
 from loginpass import create_flask_blueprint, GitHub, Google, Gitlab, Discord
 from dotenv import dotenv_values
 from datetime import datetime
+import pyrebase
 
 app = Flask(__name__)
 oauth = OAuth(app)
@@ -12,8 +13,16 @@ config = dict(config)
 app.secret_key = config["SECRET_KEY"]
 for keys in config.keys():
     app.config[keys] = config[keys]
-database = Database()
 backends = [GitHub, Google, Gitlab, Discord]
+firebaseConfig = {
+    "apiKey": config["FIREBASE_API_KEY"],
+    "authDomain": config["FIREBASE_AUTH_DOMAIN"],
+    "databaseURL": config["FIREBASE_DATABASE_URL"],
+    "storageBucket": config["FIREBASE_STORAGE_BUCKET"],
+}
+firebase = pyrebase.initialize_app(firebaseConfig)
+storage = firebase.storage()
+database = Database(storage)
 
 @app.route('/')
 def index():
@@ -145,7 +154,7 @@ def patientView(id):
             return render_template('doctors/patientview.html', user = user, patient = patient)
         return redirect(url_for('index'))
     return redirect(url_for('index'))
-   
+
 @app.route('/reports/medical', methods=['GET'])
 def medicalReport():
     if 'user' in session:
@@ -221,6 +230,66 @@ def viewMedicalReport(id):
         else:
             return redirect(url_for('medicalReport'))
     return redirect(url_for('index'))
+
+@app.route('/reports/lab', methods=['GET'])
+def labReport():
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "user":
+            reports = []
+            for i in user["labReports"]:
+                i['by'] = database.getUser(i['by'])
+                reports.append(i)
+            return render_template('patients/reports/lab/lab.html', user = user, reports = reports)
+        else:
+            reports = []
+            for i in user["labReports"]:
+                i['for'] = database.getUser(i['for'])
+                reports.append(i)
+            return render_template('doctors/reports/lab/lab.html', user = user, reports = reports)
+
+@app.route('/reports/lab/new', methods=['GET', 'POST'])
+def newLabReport():
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "doctor":
+            if request.method == 'GET':
+                patients = []
+                for i in user["patients"]:
+                    patients.append(database.getUser(i))
+                user["patients"] = patients
+                return render_template('doctors/reports/lab/add.html', user = user)
+            else:
+                data = request.form.to_dict()
+                data = dict(data)
+                Labfile = request.files['Labfile']
+                data["by"] = user["_id"]
+                data["on"] = datetime.now().strftime("%d/%m/%Y")
+                data["fileLink"] = Labfile
+                patient = database.getUser(data["for"])
+                if patient:
+                    if patient['_id'] in user["patients"] and user['_id'] in patient["doctors"]:
+                        database.addLabReport(data)
+                        return redirect(url_for('labReport'))
+                    return jsonify({"error": "Patient does not exist 2"})
+                return jsonify({"error": "Patient does not exist 3"})
+        return jsonify({"error": "User is not a doctor"})
+    return redirect(url_for('index'))
+
+@app.route('/reports/lab/<id>', methods=['GET', 'POST'])
+def viewLabReport(id):
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        report = database.getLabReport(session['user']['_id'], id)
+        if report:
+            if user["type"] == "user":
+                return render_template('patients/reports/lab/view.html', user = user, report = report)
+            else:
+                return render_template('doctors/reports/lab/view.html', user = user, report = report)
+        else:
+            return redirect(url_for('medicalReport'))
+    return redirect(url_for('index'))
+
 
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
