@@ -3,17 +3,15 @@ from models import Database
 from authlib.integrations.flask_client import OAuth
 from loginpass import create_flask_blueprint, GitHub, Google, Gitlab, Discord
 from dotenv import dotenv_values
+from datetime import datetime
 
 app = Flask(__name__)
 oauth = OAuth(app)
-
 config = dotenv_values(".env")
 config = dict(config)
-
 app.secret_key = config["SECRET_KEY"]
 for keys in config.keys():
     app.config[keys] = config[keys]
-    
 database = Database()
 backends = [GitHub, Google, Gitlab, Discord]
 
@@ -143,7 +141,64 @@ def patientView(id):
         if user["type"] == "doctor":
             patient = database.getUser(id)
             return render_template('doctors/patientview.html', user = user, patient = patient)
-        
+   
+@app.route('/reports/medical', methods=['GET'])
+def medicalReport():
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "user":
+            reports = []
+            for i in user["medicalReports"]:
+                i['by'] = database.getUser(i['by'])
+                reports.append(i)
+            return render_template('patients/reports/medical/medical.html', user = user, reports = reports)
+        else:
+            reports = []
+            for i in user["medicalReports"]:
+                i['for'] = database.getUser(i['for'])
+                reports.append(i)
+            return render_template('doctors/reports/medical/medical.html', user = user, reports = reports)
+
+@app.route('/reports/medical/new', methods=['GET', 'POST'])
+def newMedicalReport():
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "doctor":
+            if request.method == 'GET':
+                patients = []
+                for i in user["patients"]:
+                    patients.append(database.getUser(i))
+                user["patients"] = patients
+                return render_template('doctors/reports/medical/add.html', user = user)
+            else:
+                data = request.form.to_dict()
+                data = dict(data)
+                medicines = []
+                e=0
+                for i in data.keys():
+                    if i.startswith("medicineName"):
+                        e+=1
+                        medicines.append({
+                            "name": data["medicineName"+str(e)],
+                            "reason": data["medicineReason"+str(e)],
+                            "start": data["medicineStart"+str(e)],
+                            "end": data["medicineEnd"+str(e)],
+                            "time": data["medicineTime"+str(e)]
+                        })
+                for i in range(e):
+                    data.pop("medicineName"+str(i+1))
+                    data.pop("medicineReason"+str(i+1))
+                    data.pop("medicineStart"+str(i+1))
+                    data.pop("medicineEnd"+str(i+1))
+                    data.pop("medicineTime"+str(i+1))
+                    
+                data["medicines"] = medicines
+                data["by"] = user["_id"]
+                data["on"] = datetime.now().strftime("%d/%m/%Y")
+                patient = database.getUser(data["for"])
+                if patient:
+                    database.addMedicalReport(data)
+
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
         session['user'] = database.getUserByEmail(user_info['email'])

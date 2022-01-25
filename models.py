@@ -94,3 +94,15 @@ class Database:
     
     def updateUser(self, id, newData):
         self.users.update_one({"_id": id}, {"$set": newData})
+    
+    def addMedicalReport(self, report):
+        user = self.getUser(report["by"])
+        if user:
+            if user['type'] == "doctor":
+                self.users.update_one({"_id": report["by"]}, {"$push": {"medicalReports": report}})
+                self.users.update_one({"_id": report["for"]}, {"$push": {"medicalReports": report}})
+            else:
+                return False
+        else:
+            return False
+        return True
