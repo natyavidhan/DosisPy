@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{report["heading"]}}
+{% endblock title %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="text-center">
+            <h1>{{report["heading"]}}</h1>
+            <span>By <a href="/doctor/{{report.by._id}}">{{report["by"]["name"]}}</a></span><br>
+            <span>For <a href="/patient/{{report.for._id}}">{{report["for"]["name"]}}</a></span><br>
+            <span>On {{report["on"]}}</span>
+        </div>
+        <div class="mt-5">
+            <h4>Description</h4>
+            <p>{{report["description"]}}</p>
+            <h4>Comments</h4>
+            <p>{{report["comments"]}}</p>
+            <h4>Medicines</h4>
+            <div class="list-group">
+            {% for med in report["medicines"] %}
+                <div class="list-group-item list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{med['name']}}</h5>
+                        <small>On: {{med['time']}}</small>
+                    </div>
+                    <p class="mb-1">{{med['reason']}}</p>
+                    <small>From: {{med['start']}} | To: {{med['end']}}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -201,8 +201,9 @@ def newMedicalReport():
                 data["on"] = datetime.now().strftime("%d/%m/%Y")
                 patient = database.getUser(data["for"])
                 if patient:
-                    database.addMedicalReport(data)
-                    return redirect(url_for('medicalReport'))
+                    if patient['_id'] in user["patients"] and user['_id'] in patient["doctors"]:
+                        database.addMedicalReport(data)
+                        return redirect(url_for('medicalReport'))
                 return jsonify({"error": "Patient does not exist"})
         return jsonify({"error": "User is not a doctor"})
     return redirect(url_for('index'))
