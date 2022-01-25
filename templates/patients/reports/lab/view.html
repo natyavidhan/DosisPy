@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{report["heading"]}}
+{% endblock title %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="text-center">
+            <h1>{{report["heading"]}}</h1>
+            <span>By <a href="/doctor/{{report.by._id}}">{{report["by"]["name"]}}</a></span><br>
+            <span>For <a href="/patient/{{report.for._id}}">{{report["for"]["name"]}}</a></span><br>
+            <span>On {{report["on"]}}</span>
+        </div>
+        <div class="mt-5">
+            <h4>Description</h4>
+            <p>{{report["description"]}}</p>
+            <h4>Report</h4>
+            <p><a href="{{report['fileLink']}}">Click Here</a></p>
+        </div>
+    </div>
+{% endblock content %}
