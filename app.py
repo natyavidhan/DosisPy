@@ -295,7 +295,8 @@ def notifs():
     if 'user' in session:
         user = database.getUser(session['user']['_id'])
         if user['type'] == "user":
-            return render_template('patients/notifications.html', user = user)
+            notifications = database.getNotifications(user['_id'])
+            return render_template('patients/notifications.html', user = user, notifications = notifications)
 
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):

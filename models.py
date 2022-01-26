@@ -4,6 +4,7 @@ import os
 import random
 from uuid import uuid4
 from dotenv import dotenv_values
+from datetime import datetime
 
 
 class Database:
@@ -101,7 +102,7 @@ class Database:
         if user:
             if user['type'] == "doctor":
                 self.users.update_one({"_id": report["by"]}, {"$push": {"medicalReports": report}})
-                self.users.update_one({"_id": report["for"]}, {"$push": {"medicalReports": report}})
+                self.users.update_one({"_id": report["for"]}, {"$push": {"medicalReports": report, "notifications": {"type": "medicalReport", "report": report}}})
             else:
                 return False
         else:
@@ -131,7 +132,7 @@ class Database:
                 self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).put(report["fileLink"])
                 report["fileLink"] = self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).get_url(None)
                 self.users.update_one({"_id": report["by"]}, {"$push": {"labReports": report}})
-                self.users.update_one({"_id": report["for"]}, {"$push": {"labReports": report}})
+                self.users.update_one({"_id": report["for"]}, {"$push": {"labReports": report, "notifications": {"type": "labReport", "report": report}}})
                 return report["_id"]
             else:
                 return False
@@ -153,3 +154,15 @@ class Database:
                 return report
             return False
         return False
+    
+    def getNotifications(self, id):
+        user = self.getUser(id)
+        if user['type']=="user":
+            notifs = []
+            notifications = user["notifications"]
+            for notification in notifications:
+                if notification['type'] == "labReport":
+                    notifs.append({'type': 'labReport', 'report': {"heading": notification['report']['heading'], "date": notification['report']['on'], "_id": notification['report']['_id']}})
+                if notification['type'] == "medicalReport":
+                    notifs.append({'type': 'medicalReport', 'report': {"heading": notification['report']['heading'], "date": notification['report']['on'], "_id": notification['report']['_id']}})
+            return notifs[::-1]
