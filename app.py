@@ -290,6 +290,12 @@ def viewLabReport(id):
             return redirect(url_for('medicalReport'))
     return redirect(url_for('index'))
 
+@app.route('/notifications')
+def notifs():
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user['type'] == "user":
+            return render_template('patients/notifications.html', user = user)
 
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
