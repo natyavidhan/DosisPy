@@ -309,6 +309,21 @@ def blogs():
             return redirect(url_for('index'))
     return redirect(url_for('index'))
 
+@app.route('/blogs/new', methods=['GET', 'POST'])
+def newBlog():
+    if 'user'in session:
+        user = database.getUser(session['user']['_id'])
+        if user['type'] == "doctor":
+            if request.method == 'GET':
+                return render_template('blogs/new.html', user = session['user'])
+            else:
+                data = request.form.to_dict()
+                data = dict(data)
+                data['by'] = session['user']['_id']
+                data['on'] = datetime.now().strftime("%d/%m/%Y")
+                database.addBlog(data, session['user']['_id'])
+                return redirect(url_for('blogs'))
+
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
         session['user'] = database.getUserByEmail(user_info['email'])

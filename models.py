@@ -169,4 +169,10 @@ class Database:
             return notifs[::-1]
         
     def getBlogs(self, id):
-        return [blog for blog in self.blogs.find({"by": id})]
+        return [blog for blog in self.blogs.find({"by._id": id})]
+    
+    def addBlog(self, data, id):
+        user = self.getUser(id)
+        data['_id'] = self.makeId()
+        data['by'] = user
+        self.blogs.insert_one(data)
