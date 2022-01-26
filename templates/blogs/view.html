@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{blog.heading}}
+{% endblock title %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="text-center">
+            <h1>{{blog.heading}}</h1>
+            <p>Written on: {{blog.on}}</p>
+            <p>Written By: {{blog.by.name}}</p>
+        </div>
+        <div class="mt-3">
+            <p>{{blog.content}}</p>
+        </div>
+    </div>
+{% endblock content %}

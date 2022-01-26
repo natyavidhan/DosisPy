@@ -323,6 +323,17 @@ def newBlog():
                 data['on'] = datetime.now().strftime("%d/%m/%Y")
                 database.addBlog(data, session['user']['_id'])
                 return redirect(url_for('blogs'))
+        return redirect(url_for('index'))
+    return redirect(url_for('index'))
+
+@app.route('/blog/<id>')
+def viewBlog(id):
+    if 'user' in session:
+        blog = database.getBlog(id)
+        if blog:
+            return render_template('blogs/view.html', user = session['user'], blog = blog)
+        return redirect(url_for('blogs'))
+    return redirect(url_for('index'))
 
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):

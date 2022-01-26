@@ -176,3 +176,6 @@ class Database:
         data['_id'] = self.makeId()
         data['by'] = user
         self.blogs.insert_one(data)
+        
+    def getBlog(self, id):
+        return self.blogs.find_one({"_id": id})
