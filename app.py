@@ -298,6 +298,17 @@ def notifs():
             notifications = database.getNotifications(user['_id'])
             return render_template('patients/notifications.html', user = user, notifications = notifications)
 
+@app.route('/blogs')
+def blogs():
+    if 'user' in session:
+        user = database.getUser(session['user']['_id'])
+        if user['type'] == "doctor":
+            blogs = database.getBlogs(session['user']['_id'])
+            return render_template('blogs/all.html', user = session['user'], blogs = blogs)
+        else:
+            return redirect(url_for('index'))
+    return redirect(url_for('index'))
+
 def handle_authorize(remote, token, user_info):
     if database.userExists(user_info['email']):
         session['user'] = database.getUserByEmail(user_info['email'])

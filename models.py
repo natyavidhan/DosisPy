@@ -13,6 +13,7 @@ class Database:
         self.db = MongoClient(self.config["MONGOURL"]).Dosis
         self.users = self.db.users
         self.blogs = self.db.blogs
+        self.blogs = self.db.blogs
         self.storage = storage
         
     def makeId(self, length = 24):
@@ -166,3 +167,6 @@ class Database:
                 if notification['type'] == "medicalReport":
                     notifs.append({'type': 'medicalReport', 'report': {"heading": notification['report']['heading'], "date": notification['report']['on'], "_id": notification['report']['_id']}})
             return notifs[::-1]
+        
+    def getBlogs(self, id):
+        return [blog for blog in self.blogs.find({"by": id})]
