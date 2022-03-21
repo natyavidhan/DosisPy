@@ -2,14 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from models import Database
 from authlib.integrations.flask_client import OAuth
 from loginpass import create_flask_blueprint, GitHub, Google, Gitlab, Discord
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 from datetime import datetime
 import pyrebase
+import os
 
 app = Flask(__name__)
 oauth = OAuth(app)
-config = dotenv_values(".env")
-config = dict(config)
+if os.path.isfile('.env'):
+    load_dotenv()
+config = dict(os.environ)
+
 app.secret_key = config["SECRET_KEY"]
 for keys in config.keys():
     app.config[keys] = config[keys]
