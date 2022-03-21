@@ -3,14 +3,12 @@ import json
 import os
 import random
 from uuid import uuid4
-from dotenv import dotenv_values
 from datetime import datetime
-
+import os
 
 class Database:
     def __init__(self, storage):
-        self.config = dotenv_values(".env")
-        self.db = MongoClient(self.config["MONGOURL"]).Dosis
+        self.db = MongoClient(os.getenv("MONGOURL")).Dosis
         self.users = self.db.users
         self.blogs = self.db.blogs
         self.blogs = self.db.blogs

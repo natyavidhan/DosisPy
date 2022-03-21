@@ -13,15 +13,13 @@ if os.path.isfile('.env'):
     load_dotenv()
 config = dict(os.environ)
 
-app.secret_key = config["SECRET_KEY"]
-for keys in config.keys():
-    app.config[keys] = config[keys]
+app.secret_key = os.getenv("SECRET_KEY")
 backends = [GitHub, Google, Gitlab, Discord]
 firebaseConfig = {
-    "apiKey": config["FIREBASE_API_KEY"],
-    "authDomain": config["FIREBASE_AUTH_DOMAIN"],
-    "databaseURL": config["FIREBASE_DATABASE_URL"],
-    "storageBucket": config["FIREBASE_STORAGE_BUCKET"],
+    "apiKey": os.getenv("FIREBASE_API_KEY"),
+    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+    "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
+    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
 }
 firebase = pyrebase.initialize_app(firebaseConfig)
 storage = firebase.storage()
