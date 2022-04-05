@@ -13,6 +13,8 @@ if os.path.isfile('.env'):
     load_dotenv()
 config = dict(os.environ)
 
+for i in config:
+    app.config[i] = config[i]
 app.secret_key = os.getenv("SECRET_KEY")
 backends = [GitHub, Google, Gitlab, Discord]
 firebaseConfig = {
@@ -51,7 +53,7 @@ def settings():
             # print(data)
             allergies = []
             e = []
-            for keys in data.keys():
+            for keys in data:
                 if keys.startswith("allergy"):
                     allergies.append(data[keys])
                     e.append(keys)
@@ -60,7 +62,7 @@ def settings():
             data["allergies"] = allergies
             print(data)
             database.updateUser(session['user']['_id'], data)
-            
+
     return redirect(url_for('index'))
 
 @app.route('/doctors', methods=['GET', 'POST', 'DELETE'])
