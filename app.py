@@ -51,7 +51,7 @@ def settings():
             # print(data)
             allergies = []
             e = []
-            for keys in data.keys():
+            for keys in data:
                 if keys.startswith("allergy"):
                     allergies.append(data[keys])
                     e.append(keys)
@@ -60,81 +60,75 @@ def settings():
             data["allergies"] = allergies
             print(data)
             database.updateUser(session['user']['_id'], data)
-            
+
     return redirect(url_for('index'))
 
 @app.route('/doctors', methods=['GET', 'POST', 'DELETE'])
 def doctors():
-    if 'user' in session:
-        if request.method == 'GET':
-            user = database.getUser(session['user']['_id'])
-            if user["type"] == "user":
-                doctorIDs = user["doctors"]
-                doctors = []
-                for d in doctorIDs:
-                    doctors.append(database.getUser(d))
-                return render_template('patients/doctors.html', doctors = doctors, user = user)
-        elif request.method == 'POST':
-            doctorId = request.form.get("doctorId")
-            doc = database.getUser(doctorId)
-            user = database.getUser(session['user']['_id'])
-            if doc:
-                if doc["type"] == "doctor":
-                    if doc["_id"] not in user["doctors"]:
-                        database.addDoctor(session['user']['_id'], doctorId)
-                        return redirect(url_for('doctors'))
-                    else:
-                        return redirect(url_for('doctors'))
-                else:
-                    return jsonify({"error": "User is not a doctor"})
+    if 'user' not in session:
+        return
+    if request.method == 'DELETE':
+        doctorId = request.form.get("doctorId")
+        doc = database.getUser(doctorId)
+        user = database.getUser(session['user']['_id'])
+        if doc and doc["type"] == "doctor" and doc["_id"] in user["doctors"]:
+            database.removeDoctor(session['user']['_id'], doctorId)
+        return jsonify({"success": "Doctor removed"})
+    elif request.method == 'GET':
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "user":
+            doctorIDs = user["doctors"]
+            doctors = [database.getUser(d) for d in doctorIDs]
+            return render_template('patients/doctors.html', doctors = doctors, user = user)
+    elif request.method == 'POST':
+        doctorId = request.form.get("doctorId")
+        doc = database.getUser(doctorId)
+        user = database.getUser(session['user']['_id'])
+        if doc:
+            if doc["type"] == "doctor":
+                if doc["_id"] not in user["doctors"]:
+                    database.addDoctor(session['user']['_id'], doctorId)
+                return redirect(url_for('doctors'))
             else:
-                return jsonify({"error": "User does not exist"})
-        elif request.method == 'DELETE':
-            doctorId = request.form.get("doctorId")
-            doc = database.getUser(doctorId)
-            user = database.getUser(session['user']['_id'])
-            if doc:
-                if doc["type"] == "doctor":
-                    if doc["_id"] in user["doctors"]:
-                        database.removeDoctor(session['user']['_id'], doctorId)
-            return jsonify({"success": "Doctor removed"})
+                return jsonify({"error": "User is not a doctor"})
+        else:
+            return jsonify({"error": "User does not exist"})
 
 @app.route('/patients', methods=['GET', 'POST', 'DELETE'])
 def patients():
-    if 'user' in session:
-        if request.method == 'GET':
-            user = database.getUser(session['user']['_id'])
-            if user["type"] == "doctor":
-                patientsIDs = user["patients"]
-                patients = []
-                for d in patientsIDs:
-                    patients.append(database.getUser(d))
-                return render_template('doctors/patients.html', patients = patients, user = user)
-        elif request.method == 'POST':
-            patientsId = request.form.get("patientId")
-            patient = database.getUser(patientsId)
-            user = database.getUser(session['user']['_id'])
-            if patient:
-                if patient["type"] == "user":
-                    if patient["_id"] not in user["patients"]:
-                        database.addPatient(session['user']['_id'], patientsId)
-                        return redirect(url_for('patients'))
-                    else:
-                        return redirect(url_for('patients'))
-                else:
-                    return jsonify({"error": "User is not a patient"})
+    if 'user' not in session:
+        return
+    if request.method == 'DELETE':
+        patientId = request.form.get("patientId")
+        print(patientId)
+        patient = database.getUser(patientId)
+        user = database.getUser(session['user']['_id'])
+        if (
+            patient
+            and patient["type"] == "user"
+            and patient["_id"] in user["patients"]
+        ):
+            database.removePatient(session['user']['_id'], patientId)
+        return jsonify({"success": "Patient removed"})
+    elif request.method == 'GET':
+        user = database.getUser(session['user']['_id'])
+        if user["type"] == "doctor":
+            patientsIDs = user["patients"]
+            patients = [database.getUser(d) for d in patientsIDs]
+            return render_template('doctors/patients.html', patients = patients, user = user)
+    elif request.method == 'POST':
+        patientsId = request.form.get("patientId")
+        patient = database.getUser(patientsId)
+        user = database.getUser(session['user']['_id'])
+        if patient:
+            if patient["type"] == "user":
+                if patient["_id"] not in user["patients"]:
+                    database.addPatient(session['user']['_id'], patientsId)
+                return redirect(url_for('patients'))
             else:
-                return jsonify({"error": "User does not exist"})
-        elif request.method == 'DELETE':
-            patientId = request.form.get("patientId")
-            print(patientId)
-            patient = database.getUser(patientId)
-            user = database.getUser(session['user']['_id'])
-            if patient:
-                if patient["type"] == "user":
-                    if patient["_id"] in user["patients"]:
-                        database.removePatient(session['user']['_id'], patientId)
-            return jsonify({"success": "Patient removed"})
+                return jsonify({"error": "User is not a patient"})
+        else:
+            return jsonify({"error": "User does not exist"})
 
 @app.route('/doctor/<id>')
 def doctorView(id):
@@ -158,72 +152,71 @@ def patientView(id):
 
 @app.route('/reports/medical', methods=['GET'])
 def medicalReport():
-    if 'user' in session:
-        user = database.getUser(session['user']['_id'])
-        if user["type"] == "user":
-            reports = []
-            for i in user["medicalReports"]:
-                i['by'] = database.getUser(i['by'])
-                reports.append(i)
-            return render_template('patients/reports/medical/medical.html', user = user, reports = reports)
-        else:
-            reports = []
-            for i in user["medicalReports"]:
-                i['for'] = database.getUser(i['for'])
-                reports.append(i)
-            return render_template('doctors/reports/medical/medical.html', user = user, reports = reports)
+    if 'user' not in session:
+        return
+    user = database.getUser(session['user']['_id'])
+    reports = []
+    if user["type"] == "user":
+        for i in user["medicalReports"]:
+            i['by'] = database.getUser(i['by'])
+            reports.append(i)
+        return render_template('patients/reports/medical/medical.html', user = user, reports = reports)
+    else:
+        for i in user["medicalReports"]:
+            i['for'] = database.getUser(i['for'])
+            reports.append(i)
+        return render_template('doctors/reports/medical/medical.html', user = user, reports = reports)
 
 @app.route('/reports/medical/new', methods=['GET', 'POST'])
 def newMedicalReport():
-    if 'user' in session:
-        user = database.getUser(session['user']['_id'])
-        if user["type"] == "doctor":
-            if request.method == 'GET':
-                patients = []
-                for i in user["patients"]:
-                    patients.append(database.getUser(i))
-                user["patients"] = patients
-                return render_template('doctors/reports/medical/add.html', user = user)
-            else:
-                data = request.form.to_dict()
-                data = dict(data)
-                medicines = []
-                e=0
-                for i in data.keys():
-                    if i.startswith("medicineName"):
-                        e+=1
-                        medicines.append({
-                            "name": data["medicineName"+str(e)],
-                            "reason": data["medicineReason"+str(e)],
-                            "start": data["medicineStart"+str(e)],
-                            "end": data["medicineEnd"+str(e)],
-                            "time": data["medicineTime"+str(e)]
-                        })
-                for i in range(e):
-                    data.pop("medicineName"+str(i+1))
-                    data.pop("medicineReason"+str(i+1))
-                    data.pop("medicineStart"+str(i+1))
-                    data.pop("medicineEnd"+str(i+1))
-                    data.pop("medicineTime"+str(i+1))
-                    
-                data["medicines"] = medicines
-                data["by"] = user["_id"]
-                data["on"] = datetime.now().strftime("%d/%m/%Y")
-                patient = database.getUser(data["for"])
-                if patient:
-                    if patient['_id'] in user["patients"] and user['_id'] in patient["doctors"]:
-                        database.addMedicalReport(data)
-                        return redirect(url_for('medicalReport'))
-                return jsonify({"error": "Patient does not exist"})
-        return jsonify({"error": "User is not a doctor"})
-    return redirect(url_for('index'))
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    user = database.getUser(session['user']['_id'])
+    if user["type"] == "doctor":
+        if request.method == 'GET':
+            patients = [database.getUser(i) for i in user["patients"]]
+            user["patients"] = patients
+            return render_template('doctors/reports/medical/add.html', user = user)
+        else:
+            data = request.form.to_dict()
+            data = dict(data)
+            medicines = []
+            e=0
+            for i in data:
+                if i.startswith("medicineName"):
+                    e+=1
+                    medicines.append(
+                        {
+                            "name": data[f"medicineName{e}"],
+                            "reason": data[f"medicineReason{e}"],
+                            "start": data[f"medicineStart{e}"],
+                            "end": data[f"medicineEnd{e}"],
+                            "time": data[f"medicineTime{e}"],
+                        }
+                    )
+
+            for i in range(e):
+                data.pop(f"medicineName{str(i+1)}")
+                data.pop(f"medicineReason{str(i+1)}")
+                data.pop(f"medicineStart{str(i+1)}")
+                data.pop(f"medicineEnd{str(i+1)}")
+                data.pop(f"medicineTime{str(i+1)}")
+
+            data["medicines"] = medicines
+            data["by"] = user["_id"]
+            data["on"] = datetime.now().strftime("%d/%m/%Y")
+            if patient := database.getUser(data["for"]):
+                if patient['_id'] in user["patients"] and user['_id'] in patient["doctors"]:
+                    database.addMedicalReport(data)
+                    return redirect(url_for('medicalReport'))
+            return jsonify({"error": "Patient does not exist"})
+    return jsonify({"error": "User is not a doctor"})
 
 @app.route('/reports/medical/<id>', methods=['GET', 'POST'])
 def viewMedicalReport(id):
     if 'user' in session:
         user = database.getUser(session['user']['_id'])
-        report = database.getMedicalReport(session['user']['_id'], id)
-        if report:
+        if report := database.getMedicalReport(session['user']['_id'], id):
             if user["type"] == "user":
                 return render_template('patients/reports/medical/view.html', user = user, report = report)
             else:
@@ -234,55 +227,51 @@ def viewMedicalReport(id):
 
 @app.route('/reports/lab', methods=['GET'])
 def labReport():
-    if 'user' in session:
-        user = database.getUser(session['user']['_id'])
-        if user["type"] == "user":
-            reports = []
-            for i in user["labReports"]:
-                i['by'] = database.getUser(i['by'])
-                reports.append(i)
-            return render_template('patients/reports/lab/lab.html', user = user, reports = reports)
-        else:
-            reports = []
-            for i in user["labReports"]:
-                i['for'] = database.getUser(i['for'])
-                reports.append(i)
-            return render_template('doctors/reports/lab/lab.html', user = user, reports = reports)
+    if 'user' not in session:
+        return
+    user = database.getUser(session['user']['_id'])
+    reports = []
+    if user["type"] == "user":
+        for i in user["labReports"]:
+            i['by'] = database.getUser(i['by'])
+            reports.append(i)
+        return render_template('patients/reports/lab/lab.html', user = user, reports = reports)
+    else:
+        for i in user["labReports"]:
+            i['for'] = database.getUser(i['for'])
+            reports.append(i)
+        return render_template('doctors/reports/lab/lab.html', user = user, reports = reports)
 
 @app.route('/reports/lab/new', methods=['GET', 'POST'])
 def newLabReport():
-    if 'user' in session:
-        user = database.getUser(session['user']['_id'])
-        if user["type"] == "doctor":
-            if request.method == 'GET':
-                patients = []
-                for i in user["patients"]:
-                    patients.append(database.getUser(i))
-                user["patients"] = patients
-                return render_template('doctors/reports/lab/add.html', user = user)
-            else:
-                data = request.form.to_dict()
-                data = dict(data)
-                Labfile = request.files['Labfile']
-                data["by"] = user["_id"]
-                data["on"] = datetime.now().strftime("%d/%m/%Y")
-                data["fileLink"] = Labfile
-                patient = database.getUser(data["for"])
-                if patient:
-                    if patient['_id'] in user["patients"] and user['_id'] in patient["doctors"]:
-                        database.addLabReport(data)
-                        return redirect(url_for('labReport'))
-                    return jsonify({"error": "Patient does not exist 2"})
-                return jsonify({"error": "Patient does not exist 3"})
-        return jsonify({"error": "User is not a doctor"})
-    return redirect(url_for('index'))
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    user = database.getUser(session['user']['_id'])
+    if user["type"] == "doctor":
+        if request.method == 'GET':
+            patients = [database.getUser(i) for i in user["patients"]]
+            user["patients"] = patients
+            return render_template('doctors/reports/lab/add.html', user = user)
+        else:
+            data = request.form.to_dict()
+            data = dict(data)
+            Labfile = request.files['Labfile']
+            data["by"] = user["_id"]
+            data["on"] = datetime.now().strftime("%d/%m/%Y")
+            data["fileLink"] = Labfile
+            if patient := database.getUser(data["for"]):
+                if patient['_id'] in user["patients"] and user['_id'] in patient["doctors"]:
+                    database.addLabReport(data)
+                    return redirect(url_for('labReport'))
+                return jsonify({"error": "Patient does not exist 2"})
+            return jsonify({"error": "Patient does not exist 3"})
+    return jsonify({"error": "User is not a doctor"})
 
 @app.route('/reports/lab/<id>', methods=['GET', 'POST'])
 def viewLabReport(id):
     if 'user' in session:
         user = database.getUser(session['user']['_id'])
-        report = database.getLabReport(session['user']['_id'], id)
-        if report:
+        if report := database.getLabReport(session['user']['_id'], id):
             if user["type"] == "user":
                 return render_template('patients/reports/lab/view.html', user = user, report = report)
             else:
@@ -303,45 +292,40 @@ def notifs():
 def blogs():
     if 'user' in session:
         user = database.getUser(session['user']['_id'])
-        if user['type'] == "doctor":
-            blogs = database.getBlogs(session['user']['_id'])
-            return render_template('blogs/all.html', user = session['user'], blogs = blogs)
-        else:
+        if user['type'] != "doctor":
             return redirect(url_for('index'))
+        blogs = database.getBlogs(session['user']['_id'])
+        return render_template('blogs/all.html', user = session['user'], blogs = blogs)
     return redirect(url_for('index'))
 
 @app.route('/blogs/new', methods=['GET', 'POST'])
 def newBlog():
-    if 'user'in session:
-        user = database.getUser(session['user']['_id'])
-        if user['type'] == "doctor":
-            if request.method == 'GET':
-                return render_template('blogs/new.html', user = session['user'])
-            else:
-                data = request.form.to_dict()
-                data = dict(data)
-                data['by'] = session['user']['_id']
-                data['on'] = datetime.now().strftime("%d/%m/%Y")
-                database.addBlog(data, session['user']['_id'])
-                return redirect(url_for('blogs'))
+    if 'user' not in session:
         return redirect(url_for('index'))
+    user = database.getUser(session['user']['_id'])
+    if user['type'] == "doctor":
+        if request.method == 'GET':
+            return render_template('blogs/new.html', user = session['user'])
+        data = request.form.to_dict()
+        data = dict(data)
+        data['by'] = session['user']['_id']
+        data['on'] = datetime.now().strftime("%d/%m/%Y")
+        database.addBlog(data, session['user']['_id'])
+        return redirect(url_for('blogs'))
     return redirect(url_for('index'))
 
 @app.route('/blog/<id>')
 def viewBlog(id):
     if 'user' in session:
-        blog = database.getBlog(id)
-        if blog:
+        if blog := database.getBlog(id):
             return render_template('blogs/view.html', user = session['user'], blog = blog)
         return redirect(url_for('blogs'))
     return redirect(url_for('index'))
 
 def handle_authorize(remote, token, user_info):
-    if database.userExists(user_info['email']):
-        session['user'] = database.getUserByEmail(user_info['email'])
-    else:
+    if not database.userExists(user_info['email']):
         database.addUser(user_info['email'])
-        session['user'] = database.getUserByEmail(user_info['email'])
+    session['user'] = database.getUserByEmail(user_info['email'])
     return redirect(url_for('index'))
 
 bp = create_flask_blueprint(backends, oauth, handle_authorize)

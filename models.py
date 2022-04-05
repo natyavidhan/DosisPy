@@ -45,45 +45,29 @@ class Database:
         self.users.update_one({"email": email}, {"$set": {"type": "doctor", "patients": [], "labReports": [], "medicalReports": []}})
         
     def addPatient(self, id, patient):
-        user = self.getUser(id)
-        if user:
-            if user['type'] == "doctor":
-                self.users.update_one({"_id": id}, {"$push": {"patients": patient}})
-            else:
-                return False
+        if (user := self.getUser(id)) and user['type'] == "doctor":
+            self.users.update_one({"_id": id}, {"$push": {"patients": patient}})
         else:
             return False
         return True
     
     def removePatient(self, id, patient):
-        user = self.getUser(id)
-        if user:
-            if user['type'] == "doctor":
-                self.users.update_one({"_id": id}, {"$pull": {"patients": patient}})
-            else:
-                return False
+        if (user := self.getUser(id)) and user['type'] == "doctor":
+            self.users.update_one({"_id": id}, {"$pull": {"patients": patient}})
         else:
             return False
         return True
     
     def addDoctor(self, id, doctor):
-        user = self.getUser(id)
-        if user:
-            if user['type'] == "user":
-                self.users.update_one({"_id": id}, {"$push": {"doctors": doctor}})
-            else:
-                return False
+        if (user := self.getUser(id)) and user['type'] == "user":
+            self.users.update_one({"_id": id}, {"$push": {"doctors": doctor}})
         else:
             return False
         return True
     
     def removeDoctor(self, id, doctor):
-        user = self.getUser(id)
-        if user:
-            if user['type'] == "user":
-                self.users.update_one({"_id": id}, {"$pull": {"doctors": doctor}})
-            else:
-                return False
+        if (user := self.getUser(id)) and user['type'] == "user":
+            self.users.update_one({"_id": id}, {"$pull": {"doctors": doctor}})
         else:
             return False
         return True
@@ -98,19 +82,15 @@ class Database:
     def addMedicalReport(self, report):
         user = self.getUser(report["by"])
         report["_id"] = self.makeId()
-        if user:
-            if user['type'] == "doctor":
-                self.users.update_one({"_id": report["by"]}, {"$push": {"medicalReports": report}})
-                self.users.update_one({"_id": report["for"]}, {"$push": {"medicalReports": report, "notifications": {"type": "medicalReport", "report": report}}})
-            else:
-                return False
+        if user and user['type'] == "doctor":
+            self.users.update_one({"_id": report["by"]}, {"$push": {"medicalReports": report}})
+            self.users.update_one({"_id": report["for"]}, {"$push": {"medicalReports": report, "notifications": {"type": "medicalReport", "report": report}}})
         else:
             return False
         return True
 
     def getMedicalReport(self, id, reportID):
-        user = self.getUser(id)
-        if user:
+        if user := self.getUser(id):
             reports = self.users.find_one({"_id": id})["medicalReports"]
             report = None
             for r in reports:
@@ -126,22 +106,18 @@ class Database:
     def addLabReport(self, report):
         user = self.getUser(report["by"])
         report["_id"] = self.makeId(30)
-        if user:
-            if user['type'] == "doctor":
-                self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).put(report["fileLink"])
-                report["fileLink"] = self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).get_url(None)
-                self.users.update_one({"_id": report["by"]}, {"$push": {"labReports": report}})
-                self.users.update_one({"_id": report["for"]}, {"$push": {"labReports": report, "notifications": {"type": "labReport", "report": report}}})
-                return report["_id"]
-            else:
-                return False
+        if user and user['type'] == "doctor":
+            self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).put(report["fileLink"])
+            report["fileLink"] = self.storage.child("labReports/"+report["_id"]+"."+report["fileLink"].filename.split('.')[-1]).get_url(None)
+            self.users.update_one({"_id": report["by"]}, {"$push": {"labReports": report}})
+            self.users.update_one({"_id": report["for"]}, {"$push": {"labReports": report, "notifications": {"type": "labReport", "report": report}}})
+            return report["_id"]
         else:
             return False
         return True
 
     def getLabReport(self, id, reportID):
-        user = self.getUser(id)
-        if user:
+        if user := self.getUser(id):
             reports = self.users.find_one({"_id": id})["labReports"]
             report = None
             for r in reports:
@@ -167,7 +143,7 @@ class Database:
             return notifs[::-1]
         
     def getBlogs(self, id):
-        return [blog for blog in self.blogs.find({"by._id": id})]
+        return list(self.blogs.find({"by._id": id}))
     
     def addBlog(self, data, id):
         user = self.getUser(id)
